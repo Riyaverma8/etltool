@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/etltool_new.iml" filepath="$PROJECT_DIR$/.idea/etltool_new.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/etltool.iml" filepath="$PROJECT_DIR$/.idea/etltool.iml" />
+      <module fileurl="file://$PROJECT_DIR$/etltool_new/etltool_new.iml" filepath="$PROJECT_DIR$/etltool_new/etltool_new.iml" />
     </modules>
   </component>
 </project>
