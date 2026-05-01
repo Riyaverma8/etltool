@@ -21,4 +21,17 @@ public class HelloController {
     public java.util.List<Employee> getAll() {
         return repo.findAll();
     }
+    @PutMapping("/update/{id}")
+    public String updateEmployee(@PathVariable int id, @RequestBody Employee emp) {
+
+        Employee existing = repo.findById(id).orElse(null);
+
+        if (existing != null) {
+            existing.setName(emp.getName());
+            repo.save(existing);
+            return "Updated Successfully";
+        } else {
+            return "Employee Not Found";
+        }
+    }
 }
