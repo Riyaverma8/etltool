@@ -5,7 +5,9 @@ import com.project.etltool_new.repository.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import java.io.*;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
 @RestController
 public class HelloController {
@@ -13,31 +15,12 @@ public class HelloController {
     @Autowired
     private EmployeeRepository repo;
 
-    @PostMapping("/add")
-    public String addEmployee(@RequestBody Employee emp) {
-        repo.save(emp);
-        return "Data Saved Successfully";
-    }
-
-    @GetMapping("/get")
-    public java.util.List<Employee> getAll() {
-        return repo.findAll();
-    }
-    @PutMapping("/update/{id}")
-    public String updateEmployee(@PathVariable int id, @RequestBody Employee emp) {
-
-        Employee existing = repo.findById(id).orElse(null);
-
-        if (existing != null) {
-            existing.setName(emp.getName());
-            repo.save(existing);
-            return "Updated Successfully";
-        } else {
-            return "Employee Not Found";
-        }
-    }
     @PostMapping("/upload")
     public String uploadFile(@RequestParam("file") MultipartFile file) {
+
+        int inserted = 0;
+        int skipped = 0;
+
         try {
             BufferedReader reader = new BufferedReader(
                     new InputStreamReader(file.getInputStream()));
@@ -47,7 +30,7 @@ public class HelloController {
 
             while ((line = reader.readLine()) != null) {
 
-                // header skip
+                // skip header
                 if (isFirstLine) {
                     isFirstLine = false;
                     continue;
@@ -55,19 +38,43 @@ public class HelloController {
 
                 String[] data = line.split(",");
 
-                Employee emp = new Employee();
-                emp.setName(data[0]);
-                emp.setEmail(data[1]);
-                emp.setDepartment(data[2]);
-                emp.setSalary(Double.parseDouble(data[3]));
+                // validation: check column count
+                if (data.length < 4) {
+                    skipped++;
+                    continue;
+                }
 
-                repo.save(emp);
+                try {
+                    String name = data[0];
+                    String email = data[1];
+                    String department = data[2];
+                    double salary = Double.parseDouble(data[3]);
+
+                    // duplicate check
+                    if (repo.existsByEmail(email)) {
+                        skipped++;
+                        continue;
+                    }
+
+                    Employee emp = new Employee();
+                    emp.setName(name);
+                    emp.setEmail(email);
+                    emp.setDepartment(department);
+                    emp.setSalary(salary);
+
+                    repo.save(emp);
+                    inserted++;
+
+                } catch (Exception e) {
+                    // invalid row (salary error etc.)
+                    skipped++;
+                }
             }
 
-            return "CSV Uploaded Successfully";
-
         } catch (Exception e) {
-            return "Error: " + e.getMessage();
+            return "File processing failed!";
         }
+
+        return "Upload Completed | Inserted: " + inserted + " | Skipped: " + skipped;
     }
 }
